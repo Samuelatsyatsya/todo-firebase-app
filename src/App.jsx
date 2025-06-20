@@ -6,7 +6,8 @@ import {
   deleteDoc,
   onSnapshot,
   updateDoc,
-  doc
+  doc,
+  serverTimestamp
 } from "firebase/firestore";
 import {
   signInWithPopup,
@@ -17,6 +18,8 @@ import {
 function App() {
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
+  const [category, setCategory] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
   const [user, setUser] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
@@ -36,7 +39,7 @@ function App() {
     const unsubscribe = onSnapshot(collection(db, "todos"), (snapshot) => {
       const userTodos = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(todo => todo.uid === user.uid);
+        .filter(todo => todo.userId === user.uid);
       setTodos(userTodos);
     });
 
@@ -46,13 +49,16 @@ function App() {
   // Add task
   const addTodo = async (e) => {
     e.preventDefault();
-    if (input.trim()) {
+    if (input.trim() && category.trim()) {
       await addDoc(collection(db, "todos"), {
         text: input,
         completed: false,
-        uid: user.uid
+        category,
+        createdAt: serverTimestamp(),
+        userId: user.uid,
       });
       setInput("");
+      setCategory("");
     }
   };
 
@@ -89,6 +95,11 @@ function App() {
   const login = () => signInWithPopup(auth, provider);
   const logout = () => signOut(auth);
 
+  // Filtered tasks
+  const filteredTodos = filterCategory === "All"
+    ? todos
+    : todos.filter(todo => todo.category === filterCategory);
+
   return (
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h1>To-Do App</h1>
@@ -103,12 +114,29 @@ function App() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Add a task"
+              required
             />
+            <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+            <option value="Work">Select option</option>
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="School">School</option>
+            </select>
             <button type="submit">Add</button>
           </form>
 
+          <div style={{ marginTop: "1rem" }}>
+            <label>Filter by category: </label>
+            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+              <option value="All">All</option>
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="School">School</option>
+            </select>
+          </div>
+
           <ul style={{ listStyle: "none", padding: 0, marginTop: "1rem" }}>
-            {todos.map((todo) => (
+            {filteredTodos.map((todo) => (
               <li key={todo.id} style={{ marginBottom: "0.5rem" }}>
                 <input
                   type="checkbox"
@@ -137,7 +165,7 @@ function App() {
                       cursor: "pointer"
                     }}
                   >
-                    {todo.text}
+                    {todo.text} ({todo.category})
                   </span>
                 )}
 
@@ -151,7 +179,6 @@ function App() {
             ))}
           </ul>
 
-          {/* Footer */}
           <footer style={{ marginTop: "2rem", color: "#666", fontSize: "0.9rem" }}>
             &copy; {new Date().getFullYear()} SAM - K To-Do App. All rights reserved.
           </footer>
