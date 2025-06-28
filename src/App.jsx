@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { db, auth, provider } from "./firebase";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import AddTodoForm from "./components/AddTodoForm";
 import {
   collection,
   addDoc,
@@ -17,6 +18,7 @@ import {
   signOut,
   onAuthStateChanged
 } from "firebase/auth";
+import Footer from "./components/Footer";
 
 function App() {
   const [todos, setTodos] = useState([]);
@@ -98,7 +100,7 @@ function App() {
 
   return (
     <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto", fontFamily: "Arial, sans-serif" }}>
-      <h1 style={{ color: "#2c3e50" }}>📋 My To-Do App</h1>
+      <h1 style={{ color: "#2c3e50" }}>To Do App</h1>
 
       {user ? (
         <>
@@ -107,22 +109,13 @@ function App() {
 
           <AnalyticsDashboard todos={todos} />
 
-          <form onSubmit={addTodo} style={{ marginTop: "2rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Add a task"
-              required
-              style={{ flex: 1, padding: "0.5rem" }}
-            />
-            <select value={category} onChange={(e) => setCategory(e.target.value)} required style={{ padding: "0.5rem" }}>
-              <option value="#">Select option</option>
-              <option value="Work">Work</option>
-              <option value="Personal">Personal</option>
-              <option value="School">School</option>
-            </select>
-            <button type="submit" style={{ backgroundColor: "#27ae60", color: "white", padding: "0.5rem 1rem", border: "none", borderRadius: "5px" }}>Add</button>
-          </form>
+          <AddTodoForm
+            input={input}
+            setInput={setInput}
+            category={category}
+            setCategory={setCategory}
+            addTodo={addTodo}
+          />
 
           <div style={{ marginTop: "1.5rem" }}>
             <label><strong>Filter by category:</strong> </label>
@@ -182,9 +175,7 @@ function App() {
             ))}
           </ul>
 
-          <footer style={{ marginTop: "2rem", color: "#666", fontSize: "0.9rem" }}>
-            &copy; {new Date().getFullYear()} SAM - K To-Do App. All rights reserved.
-          </footer>
+          <Footer />
         </>
       ) : (
         <button onClick={login} style={{ backgroundColor: "#4285F4", color: "white", padding: "0.6rem 1.2rem", border: "none", borderRadius: "5px", fontSize: "1rem" }}>Login with Google</button>
