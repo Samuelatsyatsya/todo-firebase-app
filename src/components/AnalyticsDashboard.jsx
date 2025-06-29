@@ -17,7 +17,7 @@ const AnalyticsDashboard = ({todos}) => {
 
   return (
      <div style={{ marginTop: "3rem" }}>
-      <h2>📊 Analytics Dashboard</h2>
+      <h2>Analytics Dashboard</h2>
 
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "2rem", marginTop: "2rem" }}>
         {/* Pie Chart */}
