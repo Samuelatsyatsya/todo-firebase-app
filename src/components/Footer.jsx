@@ -1,11 +1,14 @@
-import React from 'react'
+import React from "react";
 
-const Footer = () => {
-    return (
-        <footer style={{ marginTop: "2rem", color: "#666", fontSize: "0.9rem" }}>
-            &copy; {new Date().getFullYear()} SAM - K To-Do App. All rights reserved.
-        </footer>
-    )
-}
+const Footer = () => (
+  <footer style={{
+    marginTop: "3rem",
+    textAlign: "center",
+    color: "#888",
+    fontSize: "0.85rem"
+  }}>
+    &copy; {new Date().getFullYear()} SAM - K To-Do App.
+  </footer>
+);
 
-export default Footer
+export default Footer;

@@ -1,47 +1,56 @@
-// src/components/AddTodoForm.js
 import React from "react";
 
-export default function AddTodoForm({ input, setInput, category, setCategory, addTodo }) {
-  return (
-    <form
-      onSubmit={addTodo}
+const AddTodoForm = ({ input, setInput, category, setCategory, addTodo }) => (
+  <form
+    onSubmit={addTodo}
+    style={{
+      marginTop: "2rem",
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "0.5rem"
+    }}
+  >
+    <input
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      placeholder="Add a New task"
+      required
       style={{
-        marginTop: "2rem",
-        display: "flex",
-        gap: "0.5rem",
-        flexWrap: "wrap",
+        flex: "1 1 200px",
+        padding: "0.7rem",
+        border: "1px solid #ccc",
+        borderRadius: "4px"
+      }}
+    />
+    <select
+      value={category}
+      onChange={(e) => setCategory(e.target.value)}
+      required
+      style={{
+        padding: "0.7rem",
+        border: "1px solid #ccc",
+        borderRadius: "4px"
       }}
     >
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Add a task"
-        required
-        style={{ flex: 1, padding: "0.5rem" }}
-      />
-      <select
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        required
-        style={{ padding: "0.5rem" }}
-      >
-        <option value="#">Select option</option>
-        <option value="Work">Work</option>
-        <option value="Personal">Personal</option>
-        <option value="School">School</option>
-      </select>
-      <button
-        type="submit"
-        style={{
-          backgroundColor: "#27ae60",
-          color: "white",
-          padding: "0.5rem 1rem",
-          border: "none",
-          borderRadius: "5px",
-        }}
-      >
-        Add
-      </button>
-    </form>
-  );
-}
+      <option value="#">Select option</option>
+      <option value="Work">Work</option>
+      <option value="Personal">Personal</option>
+      <option value="School">School</option>
+    </select>
+    <button
+      type="submit"
+      style={{
+        backgroundColor: "#27ae60",
+        color: "#fff",
+        padding: "0.7rem 1.2rem",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer"
+      }}
+    >
+      Add
+    </button>
+  </form>
+);
+
+export default AddTodoForm;
