@@ -1,33 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FiMenu, FiX, FiHome, FiCheckSquare } from 'react-icons/fi';
-import { MdAttachMoney, MdEvent, MdHealthAndSafety, MdSupportAgent } from 'react-icons/md';
+import {
+  FiMenu,
+  FiX,
+  FiHome,
+  FiCheckSquare,
+  FiLogOut,
+  FiUser
+} from 'react-icons/fi';
+import { MdAttachMoney, MdEvent, MdHealthAndSafety } from 'react-icons/md';
 import { FaBook } from 'react-icons/fa';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+import { auth, provider } from '../firebase';
 
-const Sidebar = () => {
+const navItems = [
+  { name: 'Dashboard', to: '/', icon: <FiHome size={20} /> },
+  { name: 'To‑Do List', to: '/todos', icon: <FiCheckSquare size={20} /> },
+  { name: 'Finance', to: '/finance', icon: <MdAttachMoney size={20} /> },
+  { name: 'Events', to: '/events', icon: <MdEvent size={20} /> },
+  { name: 'Health', to: '/health', icon: <MdHealthAndSafety size={20} /> },
+  { name: 'Study', to: '/study', icon: <FaBook size={20} /> },
+  { name: 'Support', to: '/support', icon: <FiUser size={20} /> },
+];
+
+export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
-  const login = () => signInWithPopup(auth, provider);
+  // Listen to auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return unsubscribe;
+  }, []);
 
-  const navLinks = [
-    { name: 'Dashboard', to: '/', icon: <FiHome size={20} /> },
-    { name: 'To-Do List', to: '/todos', icon: <FiCheckSquare size={20} /> },
-    { name: 'Finance Tracker', to: '/finance', icon: <MdAttachMoney size={20} /> },
-    { name: 'Event Planner', to: '/events', icon: <MdEvent size={20} /> },
-    { name: 'Health Tracker', to: '/health', icon: <MdHealthAndSafety size={20} /> },
-    { name: 'Study Planner', to: '/study', icon: <FaBook size={20} /> },
-    { name: 'Support Tickets', to: '/support', icon: <MdSupportAgent size={20} /> },
-  ];
+  const toggle = () => setIsOpen(open => !open);
+  const login = () => signInWithPopup(auth, provider);
+  const logout = () => signOut(auth);
 
   return (
     <>
-      {/* Hamburger - mobile only */}
+      {/* Mobile Toggle */}
       <button
-        onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 text-2xl text-white bg-gray-800 rounded md:hidden focus:outline-none"
-        aria-label="Toggle Sidebar"
+        onClick={toggle}
+        aria-label={isOpen ? 'Close menu' : 'Open menu'}
+        className="fixed top-4 left-4 z-50 p-2 text-2xl text-white bg-gray-800 rounded-md md:hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >
         {isOpen ? <FiX /> : <FiMenu />}
       </button>
@@ -35,63 +51,78 @@ const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4
+          fixed inset-y-0 left-0 z-40 w-64 bg-gray-800 text-white p-6
           transform ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0 transition-transform duration-300 ease-in-out
-          z-50 overflow-y-auto
+          flex flex-col
         `}
+        aria-label="Sidebar navigation"
       >
-        <h2 className="text-2xl font-bold mb-6">MyLife Suite</h2>
+        {/* Brand */}
+        <h1 className="text-2xl font-bold mb-4">MyLife Suite</h1>
 
+        {/* User Info */}
         {user ? (
-          <>
-            <div className="mb-4 flex items-center justify-between">
-              <p>Welcome, <strong>{user.displayName}</strong></p>
-              <button
-                onClick={logout}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                Logout
-              </button>
+          <div className="mb-8 flex items-center space-x-3">
+            <FiUser size={32} className="text-indigo-400" aria-hidden />
+            <div>
+              <p className="text-sm">Welcome,</p>
+              <p className="font-medium">{user.displayName}</p>
             </div>
-
-          </>
+          </div>
         ) : (
           <button
             onClick={login}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
+            className="mb-8 w-full bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Login with Google
+            Sign in with Google
           </button>
         )}
 
-        <nav className="flex flex-col space-y-4">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 ${isActive ? 'bg-gray-700' : ''
-                }`
-              }
-              onClick={() => setIsOpen(false)}
-            >
-              {link.icon}
-              <span>{link.name}</span>
-            </NavLink>
-          ))}
+        {/* Navigation */}
+        <nav className="flex-1">
+          <ul className="space-y-2">
+            {navItems.map(item => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700 transition-colors ${
+                      isActive ? 'bg-gray-700' : ''
+                    }`
+                  }
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.icon}
+                  <span className="text-sm font-medium">{item.name}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
         </nav>
+
+        {/* Logout */}
+        {user && (
+          <div className="mt-auto">
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <FiLogOut size={20} />
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={toggleSidebar}
+          onClick={toggle}
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          aria-hidden="true"
         />
       )}
     </>
   );
-};
-
-export default Sidebar;
+}
