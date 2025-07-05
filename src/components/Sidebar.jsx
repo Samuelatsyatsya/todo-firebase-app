@@ -6,8 +6,10 @@ import { FaBook } from 'react-icons/fa';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+  const login = () => signInWithPopup(auth, provider);
 
   const navLinks = [
     { name: 'Dashboard', to: '/', icon: <FiHome size={20} /> },
@@ -40,14 +42,36 @@ const Sidebar = () => {
         `}
       >
         <h2 className="text-2xl font-bold mb-6">MyLife Suite</h2>
+
+        {user ? (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <p>Welcome, <strong>{user.displayName}</strong></p>
+              <button
+                onClick={logout}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+              >
+                Logout
+              </button>
+            </div>
+
+          </>
+        ) : (
+          <button
+            onClick={login}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Login with Google
+          </button>
+        )}
+
         <nav className="flex flex-col space-y-4">
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 ${
-                  isActive ? 'bg-gray-700' : ''
+                `flex items-center gap-3 px-3 py-2 rounded hover:bg-gray-700 ${isActive ? 'bg-gray-700' : ''
                 }`
               }
               onClick={() => setIsOpen(false)}
