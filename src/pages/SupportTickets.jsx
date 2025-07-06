@@ -1,25 +1,60 @@
-import React, { useState } from 'react';
+// src/pages/SupportTickets.jsx
+import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  where,
+  doc,
+  deleteDoc
+} from "firebase/firestore";
+import { db } from "../firebase";
+import { useAuth } from "../hooks/useAuth";
 
 const SupportTickets = () => {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
 
-  const submitTicket = (e) => {
-    e.preventDefault();
-    if (!title.trim() || !message.trim()) return;
+  useEffect(() => {
+    if (!user) return;
 
-    const newTicket = {
-      id: Date.now(),
+    const q = query(
+      collection(db, "supportTickets"),
+      where("userId", "==", user.uid)
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      const ticketsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTickets(ticketsData);
+    });
+
+    return () => unsub();
+  }, [user]);
+
+  const submitTicket = async (e) => {
+    e.preventDefault();
+    if (!title.trim() || !message.trim() || !user) return;
+
+    await addDoc(collection(db, "supportTickets"), {
       title,
       message,
       status: 'Open',
       createdAt: new Date().toISOString().split('T')[0],
-    };
+      userId: user.uid
+    });
 
-    setTickets([newTicket, ...tickets]);
     setTitle('');
     setMessage('');
+  };
+
+  const handleDeleteTicket = async (id) => {
+    await deleteDoc(doc(db, "supportTickets", id));
   };
 
   return (
@@ -74,6 +109,12 @@ const SupportTickets = () => {
                 >
                   {ticket.status}
                 </span>
+                <button
+                  onClick={() => handleDeleteTicket(ticket.id)}
+                  className="ml-4 px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Delete
+                </button>
               </li>
             ))}
           </ul>
