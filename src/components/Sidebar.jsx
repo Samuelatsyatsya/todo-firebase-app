@@ -8,6 +8,7 @@ import {
   FiLogOut,
   FiUser
 } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 import { MdAttachMoney, MdEvent, MdHealthAndSafety } from 'react-icons/md';
 import { FaBook } from 'react-icons/fa';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
@@ -35,8 +36,16 @@ export default function Sidebar() {
 
   const toggle = () => setIsOpen(open => !open);
   const login = () => signInWithPopup(auth, provider);
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login'); // or navigate('/') if login is on your home page
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
+  const navigate = useNavigate();
   return (
     <>
       {/* Mobile Toggle */}
@@ -62,7 +71,7 @@ export default function Sidebar() {
         <h1 className="text-2xl font-bold mb-4">MyLife Suite</h1>
 
         {/* User Info */}
-        {user ? (
+        {user && (
           <div className="mb-8 flex items-center space-x-3">
             <FiUser size={32} className="text-indigo-400" aria-hidden />
             <div>
@@ -70,13 +79,6 @@ export default function Sidebar() {
               <p className="font-medium">{user.displayName}</p>
             </div>
           </div>
-        ) : (
-          <button
-            onClick={login}
-            className="mb-8 w-full bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Sign in with Google
-          </button>
         )}
 
         {/* Navigation */}
@@ -87,8 +89,7 @@ export default function Sidebar() {
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700 transition-colors ${
-                      isActive ? 'bg-gray-700' : ''
+                    `flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-700 transition-colors ${isActive ? 'bg-gray-700' : ''
                     }`
                   }
                   onClick={() => setIsOpen(false)}
