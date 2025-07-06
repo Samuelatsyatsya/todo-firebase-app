@@ -1,26 +1,62 @@
-import React, { useState } from 'react';
+// src/pages/StudyPlanner.jsx
+import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  addDoc,
+  doc,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  query,
+  where
+} from "firebase/firestore";
+import { db } from "../firebase";
+import { useAuth } from "../hooks/useAuth"; // must exist!
 
 const StudyPlanner = () => {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [subject, setSubject] = useState('');
   const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
 
-  const handleAddSession = (e) => {
-    e.preventDefault();
-    if (!subject || !date) return;
+  useEffect(() => {
+    if (!user) return;
 
-    const newSession = {
-      id: Date.now(),
+    const q = query(
+      collection(db, "studySessions"),
+      where("userId", "==", user.uid)
+    );
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      const sessionsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setSessions(sessionsData);
+    });
+
+    return () => unsub();
+  }, [user]);
+
+  const handleAddSession = async (e) => {
+    e.preventDefault();
+    if (!subject || !date || !user) return;
+
+    await addDoc(collection(db, "studySessions"), {
       subject,
       date,
       notes,
-    };
+      userId: user.uid
+    });
 
-    setSessions([newSession, ...sessions]);
     setSubject('');
     setDate('');
     setNotes('');
+  };
+
+  const handleDeleteSession = async (id) => {
+    await deleteDoc(doc(db, "studySessions", id));
   };
 
   return (
@@ -71,15 +107,23 @@ const StudyPlanner = () => {
               .map((session) => (
                 <li
                   key={session.id}
-                  className="p-4 bg-white rounded shadow"
+                  className="p-4 bg-white rounded shadow flex justify-between items-center"
                 >
-                  <div className="flex justify-between items-center mb-1">
-                    <h3 className="text-lg font-semibold">{session.subject}</h3>
-                    <span className="text-sm text-gray-500">{session.date}</span>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className="text-lg font-semibold">{session.subject}</h3>
+                      <span className="text-sm text-gray-500">{session.date}</span>
+                    </div>
+                    {session.notes && (
+                      <p className="text-gray-700">{session.notes}</p>
+                    )}
                   </div>
-                  {session.notes && (
-                    <p className="text-gray-700">{session.notes}</p>
-                  )}
+                  <button
+                    onClick={() => handleDeleteSession(session.id)}
+                    className="ml-4 px-3 py-1 rounded bg-red-600 text-white text-sm hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
                 </li>
               ))}
           </ul>
@@ -90,4 +134,3 @@ const StudyPlanner = () => {
 };
 
 export default StudyPlanner;
-
