@@ -1,29 +1,72 @@
 // src/pages/FinanceTracker.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  where,
+  deleteDoc,
+  doc
+} from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const FinanceTracker = () => {
   const [transactions, setTransactions] = useState([]);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState('income');
+  const [user, setUser] = useState(null);
 
-  const handleAddTransaction = (e) => {
+  // Listen for auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Listen for user transactions in Firestore
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, 'finance'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const items = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTransactions(items);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Add new transaction
+  const handleAddTransaction = async (e) => {
     e.preventDefault();
-    if (!description || !amount) return;
+    if (!description || !amount || !user) return;
 
-    const newTransaction = {
-      id: Date.now(),
+    await addDoc(collection(db, 'finance'), {
       description,
       amount: parseFloat(amount),
       type,
-    };
+      userId: user.uid,
+      createdAt: new Date()
+    });
 
-    setTransactions([newTransaction, ...transactions]);
     setDescription('');
     setAmount('');
     setType('income');
   };
 
+  // Delete transaction
+  const handleDelete = async (id) => {
+    await deleteDoc(doc(db, 'finance', id));
+  };
+
+  // Calculate totals
   const income = transactions
     .filter(t => t.type === 'income')
     .reduce((acc, curr) => acc + curr.amount, 0);
@@ -95,7 +138,7 @@ const FinanceTracker = () => {
           {transactions.map(t => (
             <li
               key={t.id}
-              className={`p-3 rounded shadow flex justify-between ${
+              className={`p-3 rounded shadow flex justify-between items-center ${
                 t.type === 'income' ? 'bg-green-50' : 'bg-red-50'
               }`}
             >
@@ -103,6 +146,12 @@ const FinanceTracker = () => {
               <span className="font-mono">
                 {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
               </span>
+              <button
+                onClick={() => handleDelete(t.id)}
+                className="text-red-500 ml-4 hover:underline"
+              >
+                Delete
+              </button>
             </li>
           ))}
         </ul>
