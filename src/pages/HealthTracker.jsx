@@ -1,33 +1,64 @@
-import React, { useState } from 'react';
+// src/pages/HealthTracker.jsx
+import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  addDoc,
+  doc,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  query,
+  where
+} from "firebase/firestore";
+import { db } from "../firebase";
+import { useAuth } from "../hooks/useAuth"; // make sure you have this!
 
 const HealthTracker = () => {
-  const [habits, setHabits] = useState([
-    { id: 1, name: 'Drink 8 glasses of water', completed: false },
-    { id: 2, name: '30 min exercise', completed: false },
-    { id: 3, name: 'Eat 5 servings of veggies', completed: false },
-  ]);
+  const { user } = useAuth();
+  const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState('');
 
-  const toggleHabit = (id) => {
-    setHabits(
-      habits.map((habit) =>
-        habit.id === id ? { ...habit, completed: !habit.completed } : habit
-      )
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, "habits"),
+      where("userId", "==", user.uid)
     );
-  };
 
-  const addHabit = (e) => {
+    const unsub = onSnapshot(q, (snapshot) => {
+      const habitsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setHabits(habitsData);
+    });
+
+    return () => unsub();
+  }, [user]);
+
+  const addHabit = async (e) => {
     e.preventDefault();
-    if (!newHabit.trim()) return;
+    if (!newHabit.trim() || !user) return;
 
-    const newEntry = {
-      id: Date.now(),
+    await addDoc(collection(db, "habits"), {
       name: newHabit.trim(),
       completed: false,
-    };
+      userId: user.uid
+    });
 
-    setHabits([newEntry, ...habits]);
     setNewHabit('');
+  };
+
+  const toggleHabit = async (habit) => {
+    const habitRef = doc(db, "habits", habit.id);
+    await updateDoc(habitRef, {
+      completed: !habit.completed
+    });
+  };
+
+  const deleteHabit = async (habitId) => {
+    await deleteDoc(doc(db, "habits", habitId));
   };
 
   return (
@@ -70,16 +101,24 @@ const HealthTracker = () => {
               >
                 {habit.name}
               </span>
-              <button
-                onClick={() => toggleHabit(habit.id)}
-                className={`px-3 py-1 rounded text-sm ${
-                  habit.completed
-                    ? 'bg-gray-500 text-white hover:bg-gray-600'
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                }`}
-              >
-                {habit.completed ? 'Undo' : 'Mark Done'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => toggleHabit(habit)}
+                  className={`px-3 py-1 rounded text-sm ${
+                    habit.completed
+                      ? 'bg-gray-500 text-white hover:bg-gray-600'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {habit.completed ? 'Undo' : 'Mark Done'}
+                </button>
+                <button
+                  onClick={() => deleteHabit(habit.id)}
+                  className="px-3 py-1 rounded text-sm bg-red-600 text-white hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -93,8 +132,10 @@ const HealthTracker = () => {
             className="bg-green-600 h-4 rounded-full"
             style={{
               width: `${
-                (habits.filter((h) => h.completed).length / habits.length) * 100
-              }%`,
+                habits.length === 0
+                  ? 0
+                  : (habits.filter((h) => h.completed).length / habits.length) * 100
+              }%`
             }}
           ></div>
         </div>
