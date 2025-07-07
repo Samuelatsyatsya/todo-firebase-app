@@ -54,7 +54,7 @@ function App() {
     <Router>
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-4">
+        <main className="flex-1 p-4 pt-10">
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<ProtectedRoute><Dashboard todos={todos} /></ProtectedRoute>} />

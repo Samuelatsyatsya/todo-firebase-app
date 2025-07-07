@@ -131,7 +131,7 @@ export default function Sidebar() {
       {isOpen && (
         <div
           onClick={toggle}
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className="fixed inset-0 bg-black opacity-30 md:hidden"
           aria-hidden="true"
         />
       )}
