@@ -8,6 +8,7 @@ import { auth, db } from "./firebase";
 import {
   onAuthStateChanged
 } from "firebase/auth";
+import { useNotifications } from "./hooks/useNotifications";
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import ProtectedRoute from "./components/ProtectedRoutes";
 import Sidebar from "./components/Sidebar";
@@ -50,6 +51,7 @@ function App() {
     return unsubscribe;
   }, [user]);
 
+  useNotifications();
   return (
     <Router>
       <div className="flex">
