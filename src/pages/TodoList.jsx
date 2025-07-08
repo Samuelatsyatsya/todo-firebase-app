@@ -15,6 +15,7 @@ import {
   signOut,
   onAuthStateChanged
 } from "firebase/auth";
+import { Timestamp } from "firebase/firestore";
 
 import AddTodoForm from "../components/AddTodoForm";
 import Footer from "../components/Footer";
@@ -27,6 +28,9 @@ const TodoList = () => {
   const [user, setUser] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
+
+  const now = Timestamp.now();
+  const remindAt = Timestamp.fromMillis(now.toMillis() + 2 * 60 * 1000); // 2 min later
 
   //  Auth check
   useEffect(() => {
@@ -59,6 +63,7 @@ const TodoList = () => {
       completed: false,
       category,
       createdAt: serverTimestamp(),
+      remindAt: remindAt,
       userId: user.uid,
       sharedWith: [],
     });
